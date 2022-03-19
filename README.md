@@ -1,5 +1,7 @@
 # Simple-Dungeon-Generator
-Generates a series of rooms connected by hallways. If a room fails to generate the number of failed rooms will be printed.
+Generates a series of rooms connected by hallways. This is best used for a small number of rooms in a small space. 
+
+If a room fails to generate the number of failed rooms will be printed.
 
 ![Dungeon Generator](https://user-images.githubusercontent.com/82299803/159111850-1f97b699-8608-409d-ae6b-a5864cbd7bd8.png)
 
