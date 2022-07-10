@@ -19,7 +19,7 @@ clock = pygame.time.Clock()
 '''WORLD PROPERTIES'''
 world_Width = 512 + 128
 world_Height = 512
-Seed = int(random.random() * 100000)
+Seed = 0#int(random.random() * 100000)
 #24159, Seed for bridges over tower
 #78832, 22071 Seed for 3 towers
 # Problem Seeds 0, 419, 15133
@@ -50,7 +50,7 @@ Color_Key = {
 world = World(world_Width, world_Height, Seed)
 # Give it Land
 world.GenerateTerrain()
-world.CreateDungeon(31,60,50 + 64,30)
+world.CreateDungeon(60,50 + 64,30)
 
 '''PROCESS WORLD OUTPUT'''
 Result = ImageHandler.process_World(Result, world, Color_Key)
