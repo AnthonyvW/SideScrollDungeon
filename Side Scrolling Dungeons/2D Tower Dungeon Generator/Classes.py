@@ -105,8 +105,10 @@ class Tower:
         # Sometimes when the width ends with .5 it doesn't round the correct direction so this stretches it across the remaining gap
         if(world.worldData[self.XPos + math.ceil(self.width / 2) + Width][SpawnHeight] == 0):
             Width += 1
+        elif(world.worldData[self.XPos + math.ceil(self.width / 2) + Width - 1][SpawnHeight] == 2):
+            Width -= 1
         # Generate Floor of Bridge
-        print(math.ceil(self.width / 2), round(self.width / 2), self.width / 2)
+        #print(math.ceil(self.width / 2), round(self.width / 2), self.width / 2)
         self.Floor(world, self.XPos + math.ceil(self.width / 2), SpawnHeight, Width, FloorDepth, 5)
         if(Width > MaxDist):
             # Generate Arches
@@ -145,6 +147,15 @@ class World:
             for y in range(self.height):
                 self.worldData[x].append(0)
 
+    def Clear(self):
+        for x in range(self.width):
+            for y in range(self.height):
+                self.worldData[x][y] = 0
+
+    def Reset(self, defAmplitude = 128, defScale = 1):
+        self.Clear()
+        self.GenerateTerrain(defAmplitude, defScale)
+
     def GenerateTerrain(self, defAmplitude = 128, defScale = 1):
         # Create Land
         for x in range(self.width):
@@ -166,7 +177,7 @@ class World:
 class Dungeon:
     def __init__(self, world, towerSpacing = 30, XEdgeTolerance = 50, YEdgeTolerance = 30):
         # Tower
-        self.numTowers = 3#random.randint(3,4)
+        self.numTowers = 4#random.randint(3,4)
         self.towerDistFromEdge = towerSpacing # How far away they can be from each other
         self.minTowerWidth = 31
         self.maxTowerWidth = 61
@@ -183,9 +194,10 @@ class Dungeon:
             if (self.numTowers * towerSpacing + self.numTowers * self.maxTowerWidth + XEdgeTolerance * 2 > world.width):
                 raise ValueError
             else:
-                print("\tTotal Requested Width =",
-                      self.numTowers * towerSpacing + self.numTowers * self.maxTowerWidth + XEdgeTolerance * 2)
-                print("\tWorld Width =", world.width)
+                pass
+                #print("\tTotal Requested Width =",
+                #      self.numTowers * towerSpacing + self.numTowers * self.maxTowerWidth + XEdgeTolerance * 2)
+                #print("\tWorld Width =", world.width)
         except:
             print("\nInvalid Pillar Properties:")
             print("\tTotal Requested Width =",

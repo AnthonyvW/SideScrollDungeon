@@ -17,14 +17,14 @@ FPS = 6
 clock = pygame.time.Clock()
 
 '''WORLD PROPERTIES'''
-world_Width = 512 + 128
+world_Width = 512 + 256
 world_Height = 512
 Seed = 0#int(random.random() * 100000)
-#24159, Seed for bridges over tower
-#78832, 22071 Seed for 3 towers
-# Problem Seeds 0, 419, 15133
-print(Seed)
-random.seed(Seed)
+#24159, Seed for potential bridges over tower
+#28840 Seed for lone tower with 3 other towers
+# Testing Seeds 0, 419, 15133
+
+
 
 
 '''OUTPUT IMAGE PROPERTIES'''
@@ -48,13 +48,19 @@ Color_Key = {
 '''WORLD GENERATION BEGIN'''
 # Create empty world
 world = World(world_Width, world_Height, Seed)
-# Give it Land
-world.GenerateTerrain()
-world.CreateDungeon(60,50 + 64,30)
 
-'''PROCESS WORLD OUTPUT'''
-Result = ImageHandler.process_World(Result, world, Color_Key)
+def GenerateWorld(Seed):
+    global Result
+    random.seed(Seed)
+    print("Seed :", Seed)
+    # Give it Land
+    world.Reset()
+    world.CreateDungeon(60,50 + 64,30)
 
+    '''PROCESS WORLD OUTPUT'''
+    Result = ImageHandler.process_World(Result, world, Color_Key)
+
+GenerateWorld(Seed)
 
 print("Finished Generation")
 run = True
@@ -69,6 +75,8 @@ while run:
         if event.type == pygame.KEYDOWN: # If a key is pressed down do stuff.
             if event.key == pygame.K_n and not key_press:
                 key_press = True
+                Seed = int(random.random() * 100000)
+                GenerateWorld(Seed)
             if event.key == pygame.K_e and not key_press:
                 key_press = True
                 ImageHandler.export_Image(Result, Seed)
@@ -78,7 +86,7 @@ while run:
             if event.key == pygame.K_e and key_press:
                 key_press = False
 
-
+    screen.fill((0,0,0))
     Output = ImageHandler.aspect_scale(Result, screen_Width, screen_Height)
     screen.blit(Output, (0,0))
 
