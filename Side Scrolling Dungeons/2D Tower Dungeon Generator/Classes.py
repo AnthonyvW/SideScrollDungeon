@@ -66,21 +66,66 @@ class Tower:
             else:
                 y += 1
 
-    def GenerateBridge(self, world, bHeight, bWidth, bFloorDepth, isRightSide, spawnHeight):
-        i = bHeight - bFloorDepth
-        i2 = i * i
-        flip = 1
-        if not isRightSide:
-            flip = -1
-        for x in range(bWidth):
+    def Arch(self, world, xpos, ypos, width, depth, material):
+        xpos = int(xpos)
+        ypos = int(ypos)
+        i = depth * depth
+        iWidth = i * width
+        denominator = 0.25 * width * width
+        for x in range(width):
             x2 = x + 0.5
-            for y in range(bHeight - int(math.sqrt((i2*bWidth*x2 - i2*x2*x2)/(0.25*bWidth*bWidth)))):
-                if(world.worldData[flip * x + self.XPos + flip * int(self.width / 2) + flip][spawnHeight - y] != 1):
-                    world.worldData[flip * x + self.XPos + flip * int(self.width / 2) + flip][spawnHeight - y] = 4
+            for y in range(depth - int(math.sqrt((iWidth * x2 - i * x2 * x2) / denominator))):
+                if (world.worldData[xpos + x][ypos - y] != 1):
+                    world.worldData[xpos + x][ypos - y] = material
 
-    def GeneratePillarBridge(self, world, bHeight, bWidth, bFloorDepth, isRightSide, spawnHeight, maxDist):
+    def Pillar(self, world, x1, y1, width, material):
+        for x in range(width):
+            bottom = False
+            y = 0
+            while not bottom:
+                if(world.worldData[x1 + x][y1 + y] == 0):
+                    world.worldData[x1 + x][y1 + y] = material
+                else:
+                    bottom = True
+                y -= 1
 
-        self.GenerateBridge(world, bHeight, bWidth, bFloorDepth, isRightSide, spawnHeight)
+    def Floor(self, world, x1, y1, width, depth, material):
+        for x in range(width):
+            for y in range(depth):
+                world.worldData[x1 + x][y1 - y] = material
+
+    def GenerateBridge(self, world, Height, Width, FloorDepth, SpawnHeight):
+        self.Floor(world, self.XPos + int(self.width / 2) + 1, SpawnHeight, Width, FloorDepth, 5)
+        self.Arch(world, self.XPos + int(self.width / 2) + 1, SpawnHeight, Width, Height, 4)
+
+    def GeneratePillarBridge(self, world, Height, Width, FloorDepth, SpawnHeight):
+        MaxDist = random.randint(30,100)
+        PillarWidth = random.randint(5, 10)
+        # Generate Floor of Bridge
+        self.Floor(world, self.XPos + int(self.width / 2) + 1, SpawnHeight, Width, FloorDepth, 5)
+        if(Width > MaxDist):
+            # Generate Arches
+            PillarCeil = math.ceil(Width / (MaxDist + PillarWidth) - 1)
+            PillarMult = int(PillarWidth * (PillarCeil))
+            if(PillarCeil <= 1):
+                PillarMult = PillarWidth
+                PillarCeil = 1
+            ArchWidths = split(Width - PillarMult, PillarCeil + 1)
+            ArchSum = 0
+            ArchOffset = 0
+            for ArchSize in ArchWidths:
+                self.Arch(world, self.XPos + int(self.width / 2) + 1 + ArchSum + ArchOffset, SpawnHeight - FloorDepth, ArchSize, Height, 4)
+                ArchSum += ArchSize
+                ArchOffset += PillarWidth
+            # Generate Pillars
+            ArchSum = 0
+            ArchOffset = 0
+            for i in range(len(ArchWidths) - 1):
+                ArchSum += ArchWidths[i]
+                self.Pillar(world, self.XPos + int(self.width / 2) + 1 + ArchSum + ArchOffset, SpawnHeight - FloorDepth, PillarWidth, 6)
+                ArchOffset += PillarWidth
+        else:
+            self.Arch(world, self.XPos + int(self.width / 2) + 1, SpawnHeight - FloorDepth, Width, Height, 4)
 
 class World:
     def __init__(self, worldWidth, worldHeight, Seed = 0):
@@ -145,7 +190,9 @@ class Dungeon:
             # Generate Tower Locations in valid spots
             position = 0
             isValid = False
-            while (not isValid):
+            attempts = 0 # if the tower fails to generate 100 times, stop attempting to generate it
+            while (not isValid and attempts < 100):
+                attempts += 1
                 position = random.randint(XEdgeTolerance - 1, world.width - XEdgeTolerance - 1)
                 isValid = True
                 for twr in self.towers:
@@ -153,15 +200,21 @@ class Dungeon:
                         isValid = False
                         break
             else:
-                self.towers.append(Tower(position, towerWidth, random.randint(90,260)))
+                if(attempts == 100):
+                    self.numTowers -= 1
+                else:
+                    self.towers.append(Tower(position, towerWidth, random.randint(90,260)))
 
-            # Generate the Tower itself
-            self.towers[i].GenerateTower(world, self.YEdgeTolerance)
+                    # Generate the Tower itself
+                    self.towers[i].GenerateTower(world, self.YEdgeTolerance)
 
         self.towers.sort(key=lambda x: x.XPos)
-        self.GenTowerBridge(world, 1, 0)
-        self.GenTowerBridge(world, 1, 2)
-        self.GenTowerBridge(world, 2, 3)
+        if(len(self.towers) > 1):
+            self.GenTowerBridge(world, 1, 0)
+        if(len(self.towers) > 2):
+            self.GenTowerBridge(world, 1, 2)
+        if(len(self.towers) > 3):
+            self.GenTowerBridge(world, 2, 3)
     def __GenTowerHeightAndSpawn(self, t1i, t2i):
         maxSpawnHeight = 0
         minSpawnHeight = 0
@@ -183,41 +236,56 @@ class Dungeon:
                     bridgeHeight = self.maxBridgeArchHeight
                 elif (bridgeHeight < self.minBridgeArchHeight):
                     print("INVALID BRIDGE HEIGHT")
-                    return
+                    return (-1000000,-1000000)
             else:
                 print("INVALID BRIDGE HEIGHT")
-                return
+                return (-1000000,-1000000)
 
         bSpawnHeight = random.randint(minSpawnHeight + bridgeHeight, maxSpawnHeight)
         return (bridgeHeight, bSpawnHeight)
+
     def GenTowerBridge(self, world, t1i, t2i):
         if(t1i == t2i): return
         flip = 1
         bridgeHeight, bSpawnHeight = self.__GenTowerHeightAndSpawn(t1i, t2i)
+        if(bridgeHeight == -1000000):
+            return
         if(self.towers[t1i].XPos < self.towers[t2i].XPos):
             bridgeWidth = int(math.fabs((self.towers[t2i].XPos - self.towers[t2i].width / 2) - (self.towers[t1i].XPos + self.towers[t1i].width / 2)))
+            # Verify that this is a valid location for the walkway of the bridge to spawn
             for x in range(bridgeWidth):
                 for y in range(self.walkwayHeight):
                     if(world.worldData[flip * x + self.towers[t1i].XPos + flip * int(self.towers[t1i].width / 2) + flip][bSpawnHeight - y] == 1):
-                        return
-            self.towers[t1i].GenerateBridge(world,
-                                            bridgeHeight,
-                                            bridgeWidth,
-                                            self.walkwayHeight,
-                                            True,
-                                            bSpawnHeight
-                                            )
-
+                        return # Returns if Land will intersect walkway
+            self.towers[t1i].GenerateBridge(world, bridgeHeight, bridgeWidth, self.walkwayHeight, bSpawnHeight)
         else:
             bridgeWidth = int(math.fabs((self.towers[t1i].XPos - self.towers[t1i].width / 2) - (self.towers[t2i].XPos + self.towers[t2i].width / 2)))
+            # Verify that this is a valid location for the walkway of the bridge to spawn
             for x in range(bridgeWidth):
                 for y in range(self.walkwayHeight):
                     if(world.worldData[flip * x + self.towers[t2i].XPos + flip * int(self.towers[t2i].width / 2) + flip][bSpawnHeight - y] == 1):
-                        return
-            self.towers[t2i].GenerateBridge(world,
-                                            bridgeHeight,
-                                            bridgeWidth,
-                                            self.walkwayHeight,
-                                            True,
-                                            bSpawnHeight
-                                            )
+                        return # Returns if Land will intersect walkway
+            self.towers[t2i].GenerateBridge(world, bridgeHeight, bridgeWidth, self.walkwayHeight, bSpawnHeight)
+
+    def GenTowerBridge(self, world, t1i, t2i):
+        if(t1i == t2i): return
+        flip = 1
+        bridgeHeight, bSpawnHeight = self.__GenTowerHeightAndSpawn(t1i, t2i)
+        if(bridgeHeight == -1000000):
+            return
+        if(self.towers[t1i].XPos < self.towers[t2i].XPos):
+            bridgeWidth = int(math.fabs((self.towers[t2i].XPos - self.towers[t2i].width / 2) - (self.towers[t1i].XPos + self.towers[t1i].width / 2)))
+            # Verify that this is a valid location for the walkway of the bridge to spawn
+            for x in range(bridgeWidth):
+                for y in range(self.walkwayHeight):
+                    if(world.worldData[flip * x + self.towers[t1i].XPos + flip * int(self.towers[t1i].width / 2) + flip][bSpawnHeight - y] == 1):
+                        return # Returns if Land will intersect walkway
+            self.towers[t1i].GeneratePillarBridge(world, bridgeHeight, bridgeWidth, self.walkwayHeight, bSpawnHeight)
+        else:
+            bridgeWidth = int(math.fabs((self.towers[t1i].XPos - self.towers[t1i].width / 2) - (self.towers[t2i].XPos + self.towers[t2i].width / 2)))
+            # Verify that this is a valid location for the walkway of the bridge to spawn
+            for x in range(bridgeWidth):
+                for y in range(self.walkwayHeight):
+                    if(world.worldData[flip * x + self.towers[t2i].XPos + flip * int(self.towers[t2i].width / 2) + flip][bSpawnHeight - y] == 1):
+                        return # Returns if Land will intersect walkway
+            self.towers[t2i].GeneratePillarBridge(world, bridgeHeight, bridgeWidth, self.walkwayHeight, bSpawnHeight)

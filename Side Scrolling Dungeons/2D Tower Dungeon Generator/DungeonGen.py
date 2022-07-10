@@ -19,7 +19,11 @@ clock = pygame.time.Clock()
 '''WORLD PROPERTIES'''
 world_Width = 512 + 128
 world_Height = 512
-Seed = 0
+Seed = int(random.random() * 100000)
+#24159, Seed for bridges over tower
+#78832, 22071 Seed for 3 towers
+# Problem Seeds 0, 419, 15133
+print(Seed)
 random.seed(Seed)
 
 
@@ -30,12 +34,14 @@ Result = pygame.Surface((world_Width, world_Height))
 Result.fill((255,255,255))
 # Create Tile ID to Color Num Dict
 Color_Key = {
-    0 : (78, 207, 255), # Sky
-    1 : (128, 128, 128), # Ground
-    2 : (255, 0, 0), # Red
-    3 : (0, 0, 255), # Blue
-    4 : (255, 128, 0),
-    5 : (0, 255, 128)
+    0 : (78, 207, 255), # Light Blue | Sky
+    1 : (128, 128, 128), # Gray | Ground
+    2 : (255, 0, 0), # Red | Tower
+    3 : (0, 0, 255), # Blue | Tower Foundations
+    4 : (255, 128, 0), # Orange | Arches
+    5 : (0, 255, 128), # Teal | Walkway
+    6 : (200, 0, 0), # Dark Red | Pillar Tops
+    7 : (100, 0, 0), # Even Darker Red | Pillar Bottom
 }
 
 
@@ -73,8 +79,8 @@ while run:
                 key_press = False
 
 
-    Result = ImageHandler.aspect_scale(Result, screen_Width, screen_Height)
-    screen.blit(Result, (0,0))
+    Output = ImageHandler.aspect_scale(Result, screen_Width, screen_Height)
+    screen.blit(Output, (0,0))
 
     pygame.display.update() # Updates Screen
 
