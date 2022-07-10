@@ -110,11 +110,12 @@ class World:
             for y in range(Output):
                 self.worldData[x][y] = 1
 
-    def CreateDungeon(self, numTowers,towerWidth ,towerDistanceFromEdge, XEdgeTolerance, YEdgeTolerance):
-        self.dungeons.append(Dungeon(self,numTowers,towerWidth ,towerDistanceFromEdge, XEdgeTolerance, YEdgeTolerance))
+    def CreateDungeon(self,towerWidth ,towerDistanceFromEdge, XEdgeTolerance, YEdgeTolerance):
+        self.dungeons.append(Dungeon(self,towerWidth ,towerDistanceFromEdge, XEdgeTolerance, YEdgeTolerance))
 
 class Dungeon:
-    def __init__(self, world, numTowers = 3,towerWidth = 31,towerDistanceFromEdge = 30, XEdgeTolerance = 50, YEdgeTolerance = 30):
+    def __init__(self, world,towerWidth = 31,towerDistanceFromEdge = 30, XEdgeTolerance = 50, YEdgeTolerance = 30):
+        self.numTowers = 4#random.randint(3,4)
         self.towerDistFromEdge = towerDistanceFromEdge
         self.towers = []
         self.walkwayHeight = 5
@@ -125,22 +126,22 @@ class Dungeon:
         self.YEdgeTolerance = YEdgeTolerance
         # Check if Pillar Properties even make sense. Raise error and quit if they don't.
         try:
-            if (numTowers * towerDistanceFromEdge + numTowers * towerWidth + XEdgeTolerance * 2 > world.width):
+            if (self.numTowers * towerDistanceFromEdge + self.numTowers * towerWidth + XEdgeTolerance * 2 > world.width):
                 raise ValueError
             else:
                 print("\tTotal Requested Width =",
-                      numTowers * towerDistanceFromEdge + numTowers * towerWidth + XEdgeTolerance * 2)
+                      self.numTowers * towerDistanceFromEdge + self.numTowers * towerWidth + XEdgeTolerance * 2)
                 print("\tWorld Width =", world.width)
         except:
             print("\nInvalid Pillar Properties:")
             print("\tTotal Requested Width =",
-                  numTowers * towerDistanceFromEdge + numTowers * towerWidth + XEdgeTolerance * 2)
+                  self.numTowers * towerDistanceFromEdge + self.numTowers * towerWidth + XEdgeTolerance * 2)
             print("\tWorld Width =", world.width)
             print("\tAmount Exceeding Width =",
-                  numTowers * towerDistanceFromEdge + numTowers * towerWidth + XEdgeTolerance * 2 - world.width)
+                  self.numTowers * towerDistanceFromEdge + self.numTowers * towerWidth + XEdgeTolerance * 2 - world.width)
             quit()
 
-        for i in range(numTowers):
+        for i in range(self.numTowers):
             # Generate Tower Locations in valid spots
             position = 0
             isValid = False
@@ -191,19 +192,31 @@ class Dungeon:
         return (bridgeHeight, bSpawnHeight)
     def GenTowerBridge(self, world, t1i, t2i):
         if(t1i == t2i): return
+        flip = 1
         bridgeHeight, bSpawnHeight = self.__GenTowerHeightAndSpawn(t1i, t2i)
         if(self.towers[t1i].XPos < self.towers[t2i].XPos):
+            bridgeWidth = int(math.fabs((self.towers[t2i].XPos - self.towers[t2i].width / 2) - (self.towers[t1i].XPos + self.towers[t1i].width / 2)))
+            for x in range(bridgeWidth):
+                for y in range(self.walkwayHeight):
+                    if(world.worldData[flip * x + self.towers[t1i].XPos + flip * int(self.towers[t1i].width / 2) + flip][bSpawnHeight - y] == 1):
+                        return
             self.towers[t1i].GenerateBridge(world,
                                             bridgeHeight,
-                                            int(math.fabs((self.towers[t2i].XPos - self.towers[t2i].width / 2) - (self.towers[t1i].XPos + self.towers[t1i].width / 2))),
+                                            bridgeWidth,
                                             self.walkwayHeight,
                                             True,
                                             bSpawnHeight
                                             )
+
         else:
+            bridgeWidth = int(math.fabs((self.towers[t1i].XPos - self.towers[t1i].width / 2) - (self.towers[t2i].XPos + self.towers[t2i].width / 2)))
+            for x in range(bridgeWidth):
+                for y in range(self.walkwayHeight):
+                    if(world.worldData[flip * x + self.towers[t2i].XPos + flip * int(self.towers[t2i].width / 2) + flip][bSpawnHeight - y] == 1):
+                        return
             self.towers[t2i].GenerateBridge(world,
                                             bridgeHeight,
-                                            int(math.fabs((self.towers[t1i].XPos - self.towers[t1i].width / 2) - (self.towers[t2i].XPos + self.towers[t2i].width / 2))),
+                                            bridgeWidth,
                                             self.walkwayHeight,
                                             True,
                                             bSpawnHeight

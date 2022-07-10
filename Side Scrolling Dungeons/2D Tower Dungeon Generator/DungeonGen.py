@@ -19,7 +19,7 @@ clock = pygame.time.Clock()
 '''WORLD PROPERTIES'''
 world_Width = 512 + 128
 world_Height = 512
-Seed = 1
+Seed = 0
 random.seed(Seed)
 
 
@@ -34,7 +34,8 @@ Color_Key = {
     1 : (128, 128, 128), # Ground
     2 : (255, 0, 0), # Red
     3 : (0, 0, 255), # Blue
-    4 : (255, 128, 0)
+    4 : (255, 128, 0),
+    5 : (0, 255, 128)
 }
 
 
@@ -43,7 +44,7 @@ Color_Key = {
 world = World(world_Width, world_Height, Seed)
 # Give it Land
 world.GenerateTerrain()
-world.CreateDungeon(4,31,60,50 + 64,30)
+world.CreateDungeon(31,60,50 + 64,30)
 
 '''PROCESS WORLD OUTPUT'''
 Result = ImageHandler.process_World(Result, world, Color_Key)
