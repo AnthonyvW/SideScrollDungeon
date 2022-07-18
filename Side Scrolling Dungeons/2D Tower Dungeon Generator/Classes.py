@@ -66,7 +66,8 @@ class Tower:
             else:
                 y += 1
 
-    def Arch(self, world, xpos, ypos, width, depth, material):
+    def Arch(self, world, xpos, ypos, width, depth, material, materialStop = 1):
+        # Generates an arch that doesn't cover the material materialStop
         xpos = int(xpos)
         ypos = int(ypos)
         i = depth * depth
@@ -75,27 +76,31 @@ class Tower:
         for x in range(width):
             x2 = x + 0.5
             for y in range(depth - int(math.sqrt((iWidth * x2 - i * x2 * x2) / denominator))):
-                if (world.worldData[xpos + x][ypos - y] != 1):
+                if (world.worldData[xpos + x][ypos - y] != materialStop):
                     world.worldData[xpos + x][ypos - y] = material
 
-    def Pillar(self, world, x1, y1, width, material):
+    def Pillar(self, world, x1, y1, width, material, materialStop = -1):
+        # Generates a Pillar that stops at materialStop or the ground
         for x in range(width):
             bottom = False
             y = 0
             while not bottom:
-                if(world.worldData[x1 + x][y1 + y] == 0):
+                if(world.worldData[x1 + x][y1 + y] == materialStop or world.worldData[x1 + x][y1 + y] == 0):
                     world.worldData[x1 + x][y1 + y] = material
                 else:
                     bottom = True
                 y -= 1
 
-    def Floor(self, world, x1, y1, width, depth, material):
-        for x in range(width):
-            for y in range(depth):
+    def Floor(self, world, x1, y1, width, depth, floordepth, material1, material2):
+        for y in range(depth):
+            material = material1
+            if y >= floordepth:
+                material = material2
+            for x in range(width):
                 world.worldData[x1 + x][y1 - y] = material
 
     def GenerateBridge(self, world, Height, Width, FloorDepth, SpawnHeight):
-        self.Floor(world, self.XPos + int(self.width / 2) + 1, SpawnHeight, Width, FloorDepth, 5)
+        self.Floor(world, self.XPos + int(self.width / 2) + 1, SpawnHeight, Width, FloorDepth, 2, 6, 5)
         self.Arch(world, self.XPos + int(self.width / 2) + 1, SpawnHeight, Width, Height, 4)
 
     def GeneratePillarBridge(self, world, Height, Width, FloorDepth, SpawnHeight):
@@ -109,7 +114,7 @@ class Tower:
             Width -= 1
         # Generate Floor of Bridge
         #print(math.ceil(self.width / 2), round(self.width / 2), self.width / 2)
-        self.Floor(world, self.XPos + math.ceil(self.width / 2), SpawnHeight, Width, FloorDepth, 5)
+        self.Floor(world, self.XPos + math.ceil(self.width / 2), SpawnHeight, Width, FloorDepth, 2, 6, 5)
         if(Width > MaxDist):
             # Generate Arches
             PillarCeil = math.ceil(Width / (MaxDist + PillarWidth) - 1)
@@ -129,7 +134,7 @@ class Tower:
             ArchOffset = 0
             for i in range(len(ArchWidths) - 1):
                 ArchSum += ArchWidths[i]
-                self.Pillar(world, self.XPos + math.ceil(self.width / 2) + ArchSum + ArchOffset, SpawnHeight - FloorDepth, PillarWidth, 6)
+                self.Pillar(world, self.XPos + math.ceil(self.width / 2) + ArchSum + ArchOffset, SpawnHeight - FloorDepth, PillarWidth, 7)
                 ArchOffset += PillarWidth
         else:
             self.Arch(world, self.XPos + math.ceil(self.width / 2), SpawnHeight - FloorDepth, Width, Height, 4)
