@@ -43,6 +43,7 @@ Color_Key = {
     6 : (0, 128, 64), # Teal | Walkway
     7 : (200, 0, 0), # Dark Red | Pillar Tops
     8 : (100, 0, 0), # Even Darker Red | Pillar Bottom
+    9 : (90,180,16), # Flanges
 }
 Final_Color_Key = {
     0 : (78, 207, 255), # Light Blue | Sky
@@ -54,6 +55,7 @@ Final_Color_Key = {
     6 : (215, 123, 186), # Teal | Walkway Top
     7 : (200, 50, 50), # Dark Red | Pillar Tops
     8 : (215, 123, 186), # Even Darker Red | Pillar Bottom
+    9 : (200, 50, 50), # Flanges
 }
 
 '''WORLD GENERATION BEGIN'''
